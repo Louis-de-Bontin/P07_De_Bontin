@@ -1,41 +1,30 @@
-from operator import itemgetter
-from random import randint
+import itertools
 from actions import actions
 
-def build_wallet (actions, capital):
-    # Tri des actions pour avoir accès à la moins chère facilement, puis déclarations de mes variables
-    sorted_actions = sorted(actions, key = lambda x: x[1])
-    wallet = []
-    sum_pourcentage = 0
+def calculate_best_wallet(actions, capital):
 
-    # Tant que le capital est superieux ou égale au prix de l'action la moins chère
-    while capital >= sorted_actions[0][1]:
-
-        rand_number = randint(0, len(sorted_actions)-1) # Je crée un chiffre aléatoire compris entre 0 et le nombre d'actions encore achetables
-
-        if capital >= sorted_actions[rand_number][1]:
-            wallet.append(sorted_actions.pop(rand_number)) # J'ajoute une action au portefeuille
-            capital -= wallet[-1][1] # Je soustrais la valueur de cette action
-
-    # Je calcule le ROI d'un portefeuille
-    for action in wallet:
-        sum_pourcentage += action[2]
-    renta = sum_pourcentage/len(wallet)
-
-    return wallet, renta
-
-def sort_wallet(actions, capital):
     wallets = []
-    best_ROI = 0
-    while True:
-        wallets.append(build_wallet(actions, capital))
-        wallets.sort(key=lambda x:x[1])
-        if wallets[-1][1] > best_ROI:
-            best_ROI = wallets[-1][1]
-            print("Pour l'instant, le meilleur portefeuille est : \n")
-            for action in wallets[-1][0]:
-                print(action[0])
-            print("Avec un ROI de : \n")
-            print(best_ROI)   
-    
-sort_wallet(actions, 600)
+    for action in range(0, len(actions)+1): # Les 2 premières lignes créent tous les wallets possibles (peu importe le capital)
+        wallets_itertools = itertools.combinations(actions, action)
+        for wallet in wallets_itertools: # Pour chaque wallet il va soustraire au capital le pris de toutes les actions comprise dans le wallet
+            new_capital = capital
+            for action in wallet:
+                new_capital -= action[1]
+            if new_capital >= 0 and new_capital <114: #Si le capital restant est compris entre 0 et le priw de l'action la plus chere, il retient le wallet comme étant viable
+                sum_pourcentage = 0
+                for action in wallet: # Il calcule donc son ROI et l'ajoute dans ma liste de wallet
+                    sum_pourcentage += action[2]
+                pourcentage = (sum_pourcentage/len(wallet))/100
+                monney_invested = capital - new_capital
+                roi = monney_invested * pourcentage
+                wallets.append([wallet, monney_invested, pourcentage, roi, len(wallet)])
+
+    wallets.sort(key = lambda x: x[3]) # Il trie les wallet par ROI
+    return wallets[-1] # Affiche le plus rentale
+
+best_wallet = calculate_best_wallet(actions, 500)
+# print(best_wallet)
+print("Le meilleur portefeuille est composés des " + str(best_wallet[4]) + " actions suivantes : ")
+for action in best_wallet[0]:
+    print(action[0] + " --> Prix : " + str(action[1]) + " Bénéfices après 2ans : " + str(action[2]))
+print("Après 2 ans, ce portefeuille raportera " + str(best_wallet[3]) + "€ avec " + str(best_wallet[1]) + "€ d'investis, soit " + str(best_wallet[2]) + "% de gains.")
