@@ -3,24 +3,28 @@ from actions import actions
 
 def calculate_best_wallet(actions, capital):
 
-    wallets = []
+    best_wallet = [[], 0, 0, 0, 0]
     for action in range(0, len(actions)+1): # Les 2 premières lignes créent tous les wallets possibles (peu importe le capital)
         wallets_itertools = itertools.combinations(actions, action)
         for wallet in wallets_itertools: # Pour chaque wallet il va soustraire au capital le pris de toutes les actions comprise dans le wallet
             new_capital = capital
             for action in wallet:
                 new_capital -= action[1]
-            if new_capital >= 0 and new_capital <114: #Si le capital restant est compris entre 0 et le priw de l'action la plus chere, il retient le wallet comme étant viable
+                # Peut être indenter le if, et comment on sait pour 114
+            # if new_capital < 0:
+            #     break
+            if new_capital == 0 and new_capital <114: #Si le capital restant est compris entre 0 et le priw de l'action la plus chere, il retient le wallet comme étant viable
                 sum_pourcentage = 0
-                for action in wallet: # Il calcule donc son ROI et l'ajoute dans ma liste de wallet
+                for action in wallet: # Il calcule donc son ROI et l'ajoute dans ma liste de wallet # Cette boucle est en 2x car sinon il ne calcule pas le %age correctement
                     sum_pourcentage += action[2]
                 pourcentage = (sum_pourcentage/len(wallet))
                 monney_invested = capital - new_capital
                 roi = monney_invested * (pourcentage/100)
-                wallets.append([wallet, monney_invested, pourcentage, roi, len(wallet)])
+                # Une vaiable best wallet, et la comparer avec new wallet
+                if roi > best_wallet[3]:
+                    best_wallet = [wallet, monney_invested, pourcentage, roi, len(wallet)]
 
-    wallets.sort(key = lambda x: x[3]) # Il trie les wallet par ROI
-    return wallets[-1] # Retourne le plus rentale
+    return best_wallet # Retourne le plus rentale
 
 
 best_wallet = calculate_best_wallet(actions, 500)
