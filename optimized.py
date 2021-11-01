@@ -1,76 +1,68 @@
-from actions import actions
+import pandas as pd
 import csv
-from time import time
+from actions import actions
+import time
 
-start_time = time()
-
-def calcul_best_wallet(actions, capital):
-    for action in actions:
-        euro_won = action[2]/action[1]
-        action.append(euro_won)
-
-    i = 0
-    best_wallet = [[], 0, 0, 0]
-    while i <= capital:
-        new_capital = i
-        new_wallet = [[], 0, 0, 0]
-        actions.sort(key = lambda x: x[3], reverse=True)
-
-        ROI_new_wallet = 0
-        monney_invested = 0
-        for action_candidate in actions:
-            if action_candidate[1] <= new_capital:
-                new_wallet[0].append(action_candidate)
-                new_capital -= action_candidate[1]
-                ROI_new_wallet += (action_candidate[2]/100)*action_candidate[1]
-                monney_invested += action_candidate[1]
-                new_wallet[1] = monney_invested
-                new_wallet[2] = ROI_new_wallet
-                new_wallet[3] = len(new_wallet[0])
-
-        # if len(new_wallet) > 0:
-        if ROI_new_wallet > best_wallet[2] and len(new_wallet) > 0:
-            best_wallet = new_wallet
-        i+=1
-    
-    return best_wallet
+start = time.time()
 
 def read_files(files_names):
-    actions = []
     for file_name in files_names:
         file = open(file_name)
         csvreader_file = csv.reader(file)
+        actions_csv = []
         for action in csvreader_file:
-            if action[1] != "price":
-                action[1] = float(action[1])
-                action[2] = float(action[2])
+            if action[1] != "price" and action[0] not in (action[0] for action in actions_csv):
+                action[1] = round(float(action[1]))
+                action[2] = round(float(action[2]))
                 if action[1] > 0 and action[2] > 0:
-                    actions.append(action)
-    return actions
+                    actions_csv.append(action)
+    print(len(actions_csv))
+    return actions_csv
 
+def get_best_folio(actions, capital):
+    folio = []
+    matrice_sad = pd.DataFrame([[(float(0), folio) for i in range(0,capital+1)]], index=["action0"])
+    cap=1
+    count = 0
+    previous_action = "action0"
+    for action in actions:
+        new_row = pd.DataFrame([[(float(0), []) for i in range(0,capital+1)]], index=[action[0]])
+        matrice_sad = matrice_sad.append(new_row, ignore_index=False)
+        while cap<=capital:
+            count+=1
+            action_price = float(action[1])
+            action_pourcent = float(action[2])
+            # Je regarde combien vaut mon folio avec cette action plus le reste (colone cap-action_price) avec la case du dessus
+            if action != "action0" and action_price <= cap:
+                folio = [action]
+                last_best_folio = matrice_sad.at[previous_action, cap]
+                # print(last_best_folio)
+                last_best_ROI = last_best_folio[0]
+                new_folio_ROI = (action_price*action_pourcent/100) + matrice_sad.at[previous_action, cap-action_price][0]
+                for share in matrice_sad.at[previous_action, cap-action_price][1]:
+                    folio.append(share)
+                if last_best_ROI >= new_folio_ROI:
+                    matrice_sad.at[action[0], cap] = last_best_folio
+                elif last_best_ROI < new_folio_ROI:
+                    matrice_sad.at[action[0], cap] = (new_folio_ROI, folio)
+            cap+=1
+        curent_time = time.time()
+        print(curent_time - start)
+        previous_action = action[0]
+        cap=0
+    return matrice_sad.iloc[-1][500]
 
-# actions = read_files(["data/dataset1_Python.csv", "data/dataset2_Python.csv"])
-best_wallet = calcul_best_wallet(actions, 500)
-print("--- %s seconds ---" % (time() - start_time))
-for action in best_wallet[0]:
-    print(
-        action[0] +
-        " --> Prix : " +
-        str(action[1]) +
-        " Bénéfices après 2ans : " +
-        str(action[2])
-    )
-print(
-    "Le meilleur portefeuille est composés des " +
-    str(best_wallet[3]) +
-    " actions ci-dessus : "
-)
-print(
-    "Après 2 ans, ce portefeuille raportera " +
-    str(best_wallet[2]) +
-    "€ avec " +
-    str(best_wallet[1]) +
-    "€ d'investis, soit " +
-    str((best_wallet[2]/best_wallet[1])*100) +
-    "% de plus value."
-)
+actions_csv = read_files(["data/dataset1_Python.csv", "data/dataset2_Python.csv"])
+
+best_folio = get_best_folio(actions_csv, 500)
+end = time.time()
+total_cost = 0
+for action in best_folio[1]:
+    print(action[0] + " --> Prix : " + str(action[1]) + "; Bénéfices après 2ans : " + str(action[2]))
+    total_cost += action[1]
+print("Le meilleur porte-feuille est composé des " + str(len(best_folio[1])) + " actions ci-dessus :")
+print("Le cout total de ce wallet est de : " + str(total_cost) + "€.")
+print("Après 2ans, il aurait rapporté " + str(best_folio[0]) + "€.")
+print("Soit une plus value de " + str(best_folio[0]/total_cost*100) + "%.")
+
+print(f"Runtime of the program is {end - start}")

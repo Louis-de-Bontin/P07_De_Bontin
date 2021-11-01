@@ -36,7 +36,7 @@ for action in best_wallet[0]:
         action[0] +
         " --> Prix : " +
         str(action[1]) +
-        " Bénéfices après 2ans : " +
+        "; Bénéfices après 2ans : " +
         str(action[2])
     )
 print(
