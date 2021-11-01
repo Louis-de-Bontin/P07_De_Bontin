@@ -16,7 +16,6 @@ def read_files(files_names):
                 action[2] = round(float(action[2]))
                 if action[1] > 0 and action[2] > 0:
                     actions_csv.append(action)
-    print(len(actions_csv))
     return actions_csv
 
 def get_best_folio(actions, capital):
@@ -28,12 +27,13 @@ def get_best_folio(actions, capital):
     for action in actions:
         new_row = pd.DataFrame([[(float(0), []) for i in range(0,capital+1)]], index=[action[0]])
         matrice_sad = matrice_sad.append(new_row, ignore_index=False)
-        while cap<=capital:
+        action_price = float(action[1])
+        action_pourcent = float(action[2])
+        cap = action_price
+        while cap <= capital:
             count+=1
-            action_price = float(action[1])
-            action_pourcent = float(action[2])
             # Je regarde combien vaut mon folio avec cette action plus le reste (colone cap-action_price) avec la case du dessus
-            if action != "action0" and action_price <= cap:
+            if action != "action0":
                 folio = [action]
                 last_best_folio = matrice_sad.at[previous_action, cap]
                 # print(last_best_folio)
@@ -46,10 +46,11 @@ def get_best_folio(actions, capital):
                 elif last_best_ROI < new_folio_ROI:
                     matrice_sad.at[action[0], cap] = (new_folio_ROI, folio)
             cap+=1
-        curent_time = time.time()
-        print(curent_time - start)
+        # curent_time = time.time()
+        # print(curent_time - start)
         previous_action = action[0]
         cap=0
+    print(count)
     return matrice_sad.iloc[-1][500]
 
 actions_csv = read_files(["data/dataset1_Python.csv", "data/dataset2_Python.csv"])
