@@ -12,8 +12,8 @@ def read_files(files_names):
         csvreader_file = csv.reader(file)
         for action in csvreader_file:
             if action[1] != "price" and action[0] not in (action[0] for action in actions_csv):
-                action[1] = round(float(action[1]))
-                action[2] = round(float(action[2]))
+                action[1] = round(float(action[1])*100)
+                action[2] = round(float(action[2])*100)
                 if action[1] > 0 and action[2] > 0:
                     actions_csv.append(action)
     return actions_csv
@@ -36,7 +36,6 @@ def get_best_folio(actions, capital):
             if action != "action0":
                 folio = [action]
                 last_best_folio = matrice_sad.at[previous_action, cap]
-                # print(last_best_folio)
                 last_best_ROI = last_best_folio[0]
                 new_folio_ROI = (action_price*action_pourcent/100) + matrice_sad.at[previous_action, cap-action_price][0]
                 for share in matrice_sad.at[previous_action, cap-action_price][1]:
@@ -50,22 +49,22 @@ def get_best_folio(actions, capital):
         # print(curent_time - start)
         previous_action = action[0]
         cap=0
-    return matrice_sad.iloc[-1][500]
+    return matrice_sad.iloc[-1][50000]
 
 def display_results(best_folio):
     total_cost = 0
     for action in best_folio[1]:
-        print(action[0] + " --> Prix : " + str(action[1]) + "; Bénéfices après 2ans : " + str(action[2]))
-        total_cost += action[1]
+        print(action[0] + " --> Prix : " + str(action[1]/100) + "; Bénéfices après 2ans : " + str(action[2]/100))
+        total_cost += action[1]/100
     print("Le meilleur porte-feuille est composé des " + str(len(best_folio[1])) + " actions ci-dessus :")
     print("Le cout total de ce wallet est de : " + str(total_cost) + "€.")
-    print("Après 2ans, il aurait rapporté " + str(best_folio[0]) + "€.")
-    print("Soit une plus value de " + str(best_folio[0]/total_cost*100) + "%.")
+    print("Après 2ans, il aurait rapporté " + str(best_folio[0]/10000) + "€.")
+    print("Soit une plus value de " + str((best_folio[0]/total_cost*100)/10000) + "%.")
 
 files = ["data/dataset1_Python.csv", "data/dataset2_Python.csv"]
 for file in files:
     actions_csv = read_files([file])
-    best_folio = get_best_folio(actions_csv, 500)
+    best_folio = get_best_folio(actions_csv, 50000)
     file.replace("data/data", "").replace("_Python.csv", "")
     print(file, " : ")
     display_results(best_folio)
