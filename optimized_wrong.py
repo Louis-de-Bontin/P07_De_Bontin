@@ -4,11 +4,11 @@ from time import time
 
 # start_time = time()
 
+
 def calcul_best_wallet(actions, capital):
     for action in actions:
         euro_won = action[2]/action[1]
         action.append(euro_won)
-    # actions.sort(key = lambda x: x[3], reverse=True)
 
     i = 0
     best_wallet = [[], 0, 0, 0]
@@ -31,9 +31,10 @@ def calcul_best_wallet(actions, capital):
         # if len(new_wallet) > 0:
         if ROI_new_wallet > best_wallet[2] and len(new_wallet) > 0:
             best_wallet = new_wallet
-        i+=1
-    
+        i += 1
+
     return best_wallet
+
 
 def read_files(files_names):
     actions = []
@@ -49,9 +50,8 @@ def read_files(files_names):
     return actions
 
 
-# actions = read_files(["data/dataset1_Python.csv", "data/dataset2_Python.csv"])
+actions = read_files(["data/dataset1_Python.csv", "data/dataset2_Python.csv"])
 best_wallet = calcul_best_wallet(actions, 500)
-print(best_wallet)
 for action in best_wallet[0]:
     print(
         action[0] +
